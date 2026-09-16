@@ -4,7 +4,7 @@
 import { reactive } from 'vue'
 
 import { setApiCity } from '@/lib/api'
-import { getCities, getCategories } from '@/lib/endpoints'
+import { getCities } from '@/lib/endpoints'
 
 const CITY_KEY = '24mini:city'
 
@@ -14,7 +14,6 @@ export const store = reactive({
   ready: false,
   city: { id: 3, name: 'Минск', slug: 'minsk' },
   cities: [],
-  categories: [],
   currencySymbol: 'р.',
   headerTitle: '',
   widget: { open: false, url: '', title: '' },
@@ -41,18 +40,12 @@ function persistCity() {
 export async function init() {
   restoreCity()
   setApiCity(store.city.id)
-  // города и категории — независимо: недоступность одного не блокирует второе
   getCities()
     .then((cities) => {
       store.cities = cities
     })
     .catch(() => {})
-  await reloadCategories().catch(() => {})
   store.ready = true
-}
-
-export async function reloadCategories() {
-  store.categories = await getCategories(store.city.id)
 }
 
 export function setCity(city) {
@@ -60,17 +53,37 @@ export function setCity(city) {
   store.city = { id: city.id, name: city.name, slug: city.slug }
   setApiCity(city.id)
   persistCity()
-  reloadCategories().catch(() => {})
 }
 
 // ── виджет продажи (saleframe) ───────────────────────────────────────────────
-// URL — порт common/components/widget/widget.vue:113-146, хост захардкожен на прод.
+// URL — порт common/components/widget/widget.vue:113-146 + store/widget.js:168
+// (openServiceItem), хост захардкожен на прод.
 
 export function openSession(session, title = '') {
   if (!session?.id) return
   store.widget = {
     open: true,
     url: `${SALEFRAME_HOST}?sid=${session.id}&lang=ru`,
+    title,
+  }
+}
+
+/** товар/билет события без дат: /item?oid=<institutionId>&iid=<itemId> */
+export function openItem(item, title = '') {
+  if (!item?.id) return
+  store.widget = {
+    open: true,
+    url: `${SALEFRAME_HOST}/item?oid=${item.institutionId}&iid=${item.id}&lang=ru`,
+    title,
+  }
+}
+
+/** услуга: ?oid=<id площадки>&seid=<id услуги> */
+export function openService(objectId, serviceId, title = '') {
+  if (!objectId || !serviceId) return
+  store.widget = {
+    open: true,
+    url: `${SALEFRAME_HOST}?oid=${objectId}&seid=${serviceId}&lang=ru`,
     title,
   }
 }

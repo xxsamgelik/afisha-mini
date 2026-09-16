@@ -8,11 +8,12 @@ import { store } from '@/store'
 const route = useRoute()
 
 const isBack = computed(() => Boolean(route.meta.back))
+const isOverlay = computed(() => route.name === 'event')
 const title = computed(() => store.headerTitle || route.meta.title || '')
 </script>
 
 <template>
-  <header class="hdr">
+  <header class="hdr" :class="{ 'hdr--overlay': isOverlay }">
     <div class="hdr__sheen" aria-hidden="true" />
     <template v-if="!isBack">
       <router-link class="hdr__logo" to="/c/top">24<span> афиша</span></router-link>
@@ -62,6 +63,21 @@ const title = computed(() => store.headerTitle || route.meta.title || '')
 
 .hdr > * {
   position: relative;
+}
+
+/* На странице события — прозрачный градиент с блюром: hero картинки заходит под шапку */
+.hdr--overlay {
+  background: transparent;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.hdr--overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--grad);
+  opacity: 0.78;
 }
 
 .hdr__logo {

@@ -1,19 +1,29 @@
 <script setup>
-// Страница события: hero + описание + вкладки дней (calendar) + сеансы на день
-// (/api/v2/schedule/events/{id}) + «Похожие».
+// Страница события: hero (заходит под шапку) + свёрнутое описание + расписание
+// с вкладками дней (calendar; дни без событий — disabled) + сеансы по площадкам
+// + билеты/товары/услуги (у событий без дат — вместо расписания) + «Похожие».
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import AppIcon from '@/components/AppIcon.vue'
 import EventCard from '@/components/EventCard.vue'
+import ItemRow from '@/components/ItemRow.vue'
 import SkeletonBlock from '@/components/SkeletonBlock.vue'
 import StateMessage from '@/components/StateMessage.vue'
 import VenueSessions from '@/components/VenueSessions.vue'
 import { isAbort } from '@/lib/api'
-import { dayStartUnix, dateHumanWithWeekday, isValidIso, todayIso, weekdayShort, dayNumber } from '@/lib/date'
+import {
+  dayStartUnix,
+  dateHumanWithWeekday,
+  isValidIso,
+  todayIso,
+  weekdayShort,
+  dayNumber,
+} from '@/lib/date'
 import { durationHuman, priceLabel } from '@/lib/format'
 import { hero } from '@/lib/img'
 import { getEvent, getSchedule } from '@/lib/endpoints'
-import { openSession, store } from '@/store'
+import { openItem, openService, openSession, store } from '@/store'
 
 const route = useRoute()
 const router = useRouter()
@@ -27,8 +37,18 @@ const scheduleStatus = ref('idle') // idle | loading | ready | empty
 const venues = ref([])
 let scheduleCtrl = null
 
+const descriptionOpen = ref(false)
+
 const performance = computed(() => page.value?.performance)
 const calendar = computed(() => (page.value?.calendar || []).filter((day) => day.date))
+const hasDates = computed(() => calendar.value.length > 0)
+
+// товары/билеты и услуги (у событий без дат — единственный способ купить)
+const items = computed(() => (performance.value?.items || []).filter((item) => item?.id))
+const services = computed(() => performance.value?.objectsWithActiveServices || [])
+const itemsTitle = computed(() =>
+  items.value.every((item) => item.itemType === 'ticket') ? 'Билеты' : 'Товары',
+)
 
 const selectedDate = computed(() => {
   const queryDate = route.query.date
@@ -46,13 +66,14 @@ watch(
 )
 
 watch(selectedDate, (date) => {
-  if (status.value === 'ready') loadSchedule(date)
+  if (status.value === 'ready' && hasDates.value) loadSchedule(date)
 })
 
 async function load() {
   status.value = 'loading'
   page.value = null
   venues.value = []
+  scheduleStatus.value = 'idle'
   try {
     page.value = await getEvent(slug.value)
     if (!page.value.performance) {
@@ -61,7 +82,7 @@ async function load() {
     }
     store.headerTitle = page.value.performance.name
     status.value = 'ready'
-    loadSchedule(selectedDate.value)
+    if (hasDates.value) loadSchedule(selectedDate.value)
   } catch {
     status.value = 'error'
   }
@@ -88,6 +109,14 @@ function pickDate(iso) {
 
 function onBuy(session) {
   openSession(session, performance.value?.name)
+}
+
+function onBuyItem(item) {
+  openItem(item, performance.value?.name)
+}
+
+function onBuyService(service) {
+  openService(service.objectId, service.id, performance.value?.name)
 }
 
 const heroImg = computed(() => hero(performance.value?.image, performance.value?.images))
@@ -126,7 +155,7 @@ const description = computed(
     />
 
     <template v-else>
-      <!-- hero -->
+      <!-- hero: верх картинки уходит под прозрачную шапку -->
       <div class="hero">
         <img v-if="heroImg" class="hero__img" :src="heroImg" :alt="performance.name" decoding="async">
         <div class="hero__overlay" />
@@ -143,16 +172,24 @@ const description = computed(
         </div>
       </div>
 
-      <!-- описание -->
+      <!-- описание: скрыто по умолчанию, раскрывается тапом -->
       <section v-if="description" class="section">
-        <h2 class="section__title">Описание</h2>
+        <button class="section__toggle" type="button" @click="descriptionOpen = !descriptionOpen">
+          <h2 class="section__title">Описание</h2>
+          <AppIcon
+            class="section__chevron"
+            :class="{ 'is-open': descriptionOpen }"
+            name="chevron-down"
+            :size="18"
+          />
+        </button>
         <!-- HTML приходит из админки 24afisha, как и на самом сайте -->
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="section__text" v-html="description" />
+        <div v-show="descriptionOpen" class="section__text" v-html="description" />
       </section>
 
-      <!-- дни из calendar + сеансы -->
-      <section class="section">
+      <!-- расписание: только у событий с датами; дни без событий — disabled -->
+      <section v-if="hasDates" class="section">
         <h2 class="section__title">Расписание</h2>
         <div class="days scroll-row">
           <button
@@ -200,6 +237,33 @@ const description = computed(
         </div>
       </section>
 
+      <!-- билеты/товары (items) -->
+      <section v-if="items.length" class="section">
+        <h2 class="section__title">{{ itemsTitle }}</h2>
+        <ItemRow
+          v-for="item in items"
+          :key="item.id"
+          :item="item"
+          kind="item"
+          @buy="onBuyItem"
+        />
+      </section>
+
+      <!-- услуги (objectsWithActiveServices) -->
+      <section v-if="services.length" class="section">
+        <h2 class="section__title">Услуги</h2>
+        <div v-for="obj in services" :key="obj.id" class="svc">
+          <p v-if="obj.name" class="svc__name">{{ obj.name }}</p>
+          <ItemRow
+            v-for="service in obj.activeAbonements || obj.activeServices || []"
+            :key="service.id"
+            :item="{ ...service, objectId: obj.id }"
+            kind="service"
+            @buy="onBuyService"
+          />
+        </div>
+      </section>
+
       <!-- похожие -->
       <section v-if="page.more.length" class="section">
         <h2 class="section__title">Похожие события</h2>
@@ -227,7 +291,9 @@ const description = computed(
 /* hero */
 .hero {
   position: relative;
-  min-height: 220px;
+  min-height: 230px;
+  /* верх картинки уходит под полупрозрачную шапку */
+  margin-top: calc(-1 * (var(--header-h) + var(--safe-top)));
 }
 
 .hero__img {
@@ -249,7 +315,7 @@ const description = computed(
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 110px 16px 16px;
+  padding: 120px 16px 16px;
   color: #fff;
 }
 
@@ -298,9 +364,30 @@ const description = computed(
 }
 
 .section__title {
-  margin-bottom: 12px;
   font-size: 18px;
   font-weight: 700;
+}
+
+.section__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.section__toggle .section__title {
+  margin-bottom: 0;
+}
+
+.section__chevron {
+  color: var(--text-muted-2);
+  transition: transform 0.2s ease;
+}
+
+.section__chevron.is-open {
+  transform: rotate(180deg);
 }
 
 .section__text {
@@ -316,6 +403,18 @@ const description = computed(
 
 .section__text :deep(img) {
   border-radius: var(--r-card);
+}
+
+/* услуги */
+.svc {
+  margin-bottom: 8px;
+}
+
+.svc__name {
+  margin: 8px 0 2px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
 }
 
 /* вкладки дней */

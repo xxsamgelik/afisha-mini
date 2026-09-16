@@ -11,7 +11,6 @@ defineEmits(['retry'])
 const props = defineProps({
   events: { type: Array, default: () => [] },
   status: { type: String, default: 'loading' }, // loading | ready | empty | error
-  date: { type: String, default: '' },
 })
 
 const PAGE = 30
@@ -45,13 +44,13 @@ const hasMore = computed(() => props.events.length > visible.value)
   <StateMessage
     v-else-if="status === 'empty'"
     icon="calendar"
-    title="На этот день ничего нет"
-    text="Попробуйте выбрать другую дату"
+    title="Пока ничего нет"
+    text="Загляните позже — афиша обновляется"
   />
 
   <template v-else>
     <div class="event-list">
-      <EventCard v-for="event in shown" :key="event.id" :event="event" :date="date" />
+      <EventCard v-for="event in shown" :key="event.id" :event="event" />
     </div>
     <button v-if="hasMore" class="event-list__more" type="button" @click="visible += PAGE">
       Показать ещё

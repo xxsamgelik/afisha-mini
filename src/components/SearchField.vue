@@ -37,7 +37,7 @@ onBeforeUnmount(() => clearTimeout(timer))
       class="search-field__input"
       type="search"
       :value="modelValue"
-      placeholder="Событие, актёр, место…"
+      placeholder="Поиск событий"
       enterkeyhint="search"
       autofocus
       @input="onInput"

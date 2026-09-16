@@ -12,8 +12,7 @@ export const router = createRouter({
   history: createWebHashHistory(),
   scrollBehavior: () => ({ top: 0 }),
   routes: [
-    { path: '/', redirect: '/c/top' },
-    { path: '/c/:slug', name: 'category', component: HomeView },
+    { path: '/', name: 'home', component: HomeView },
     { path: '/event/:slug', name: 'event', component: EventView, meta: { back: true } },
     { path: '/search', name: 'search', component: SearchView, meta: { back: true, title: 'Поиск' } },
     { path: '/city', name: 'city', component: CityView, meta: { back: true, title: 'Город' } },

@@ -14,9 +14,9 @@ yarn preview    # раздача dist на :5174
 
 ## Что внутри
 
-- **Главная** (`/#/c/:slug?date=`) — категории + лента дат на 30 дней + афиша на день.
-- **Событие** (`/#/event/:slug?date=`) — hero, описание, вкладки дней, сеансы по площадкам, «Похожие».
-- **Поиск** (`/#/search`) — дебаунс 300 мс, события + площадки.
+- **Главная** (`/#/`) — единая лента всех событий (тот же фид `/api/v3/pages/afisha`, что на home 24afisha.by, разгруппированный и без дублей).
+- **Событие** (`/#/event/:slug`) — hero под прозрачной шапкой, свёрнутое описание, расписание с вкладками дней (дни без событий — disabled), сеансы по площадкам; у событий **без дат** (товары/услуги) вместо расписания — список билетов/товаров (`performance.items`) и услуг (`objectsWithActiveServices`) с покупкой; «Похожие».
+- **Поиск** (`/#/search`) — дебаунс 300 мс, только события.
 - **Город** (`/#/city`) — выбор города, хранится в `localStorage['24mini:city']`.
 
 ## API
@@ -32,7 +32,13 @@ yarn preview    # раздача dist на :5174
 
 ## Покупка
 
-Кнопка на сеансе открывает существующий виджет продажи `https://saleframe.24afisha.by?sid=<sessionId>&lang=ru` в полноэкранном iframe (`src/components/SaleWidget.vue`). Протокол postMessage — порт `common/components/widget/widget.vue` из монорепы `24`: `closeFrame`, `closeFrameError`, `requestToken` (отвечаем `{action:'auth', token:''}` — логина в мини-аппе нет).
+Все три вида покупок открывают существующий виджет продажи в полноэкранном iframe (`src/components/SaleWidget.vue`); строители URL — в `src/store/index.js`, порт `common/components/widget/widget.vue:113-146` и `apps/afisha/store/widget.js:168`:
+
+- сеанс: `?sid=<sessionId>&lang=ru`
+- товар/билет (события без дат): `/item?oid=<institutionId>&iid=<itemId>&lang=ru`
+- услуга: `?oid=<id площадки>&seid=<id услуги>&lang=ru`
+
+Протокол postMessage — порт `widget.vue:94-112`: `closeFrame`, `closeFrameError`, `requestToken` (отвечаем `{action:'auth', token:''}` — логина в мини-аппе нет).
 
 ## Интеграция «Оплати» (TODO)
 

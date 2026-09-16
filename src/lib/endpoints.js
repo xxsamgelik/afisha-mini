@@ -22,6 +22,30 @@ export async function getCategories(cityId) {
 }
 
 /**
+ * Главная лента: /api/v3/pages/afisha — тот же фид, что на home 24afisha.by.
+ * Ответ сгруппирован по категориям ({top:…, kino:…}), собираем в плоский список
+ * без дублей (top пересекается с тематическими группами).
+ */
+export async function getHomeFeed(signal) {
+  const body = await request(
+    '/api/v3/pages/afisha',
+    { ignoreEndTime: 1, home_sort: 1, limit: 12, onlyData: 0, isMobile: 1 },
+    { signal },
+  )
+  const seen = new Set()
+  const events = []
+  for (const group of Object.values(body?.data || {})) {
+    for (const raw of group?.events || []) {
+      const event = camelizeDeep(raw)
+      if (!event?.slug || seen.has(event.slug)) continue
+      seen.add(event.slug)
+      events.push(event)
+    }
+  }
+  return events
+}
+
+/**
  * Листинг категории. С датой → data.currentDate; без даты → data.month (группы
  * {performations}), собираем в плоский список.
  */

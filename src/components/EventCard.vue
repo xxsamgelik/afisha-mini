@@ -8,22 +8,15 @@ import { poster } from '@/lib/img'
 
 const props = defineProps({
   event: { type: Object, required: true },
-  /** дата листинга — уходит в ?date= деталки, чтобы открыть ту же вкладку расписания */
-  date: { type: String, default: '' },
 })
 
 const image = computed(() => poster(props.event.image))
 const price = computed(() => priceLabel(props.event.minPrice))
 const kind = computed(() => props.event.types?.[0]?.name || props.event.genres?.[0]?.name || '')
-
-const to = computed(() => ({
-  path: `/event/${props.event.slug}`,
-  query: props.date ? { date: props.date } : {},
-}))
 </script>
 
 <template>
-  <router-link class="event-card" :to="to">
+  <router-link class="event-card" :to="`/event/${event.slug}`">
     <div class="event-card__view">
       <img
         v-if="image"
