@@ -39,6 +39,9 @@ let scheduleCtrl = null
 
 const descriptionOpen = ref(false)
 
+// город, в контексте которого смотрим событие (события бывают «не в нашем городе»)
+const viewCityId = ref(store.city.id)
+
 const performance = computed(() => page.value?.performance)
 const calendar = computed(() => (page.value?.calendar || []).filter((day) => day.date))
 const hasDates = computed(() => calendar.value.length > 0)
@@ -48,6 +51,16 @@ const items = computed(() => (performance.value?.items || []).filter((item) => i
 const services = computed(() => performance.value?.objectsWithActiveServices || [])
 const itemsTitle = computed(() =>
   items.value.every((item) => item.itemType === 'ticket') ? 'Билеты' : 'Товары',
+)
+
+// продавать в текущем городе нечего, но событие есть в других
+const cities = computed(() => page.value?.cities || [])
+const otherCities = computed(() => cities.value.filter((c) => c.id && c.id !== viewCityId.value))
+const nothingToBuy = computed(
+  () => status.value === 'ready' && !hasDates.value && !items.value.length && !services.value.length,
+)
+const viewCityName = computed(
+  () => cities.value.find((c) => c.id === viewCityId.value)?.name || '',
 )
 
 const selectedDate = computed(() => {
@@ -60,6 +73,7 @@ const selectedDate = computed(() => {
 watch(
   slug,
   () => {
+    viewCityId.value = store.city.id
     load()
   },
   { immediate: true },
@@ -75,7 +89,7 @@ async function load() {
   venues.value = []
   scheduleStatus.value = 'idle'
   try {
-    page.value = await getEvent(slug.value)
+    page.value = await getEvent(slug.value, viewCityId.value)
     if (!page.value.performance) {
       status.value = 'error'
       return
@@ -94,12 +108,24 @@ async function loadSchedule(date) {
   scheduleCtrl = new AbortController()
   scheduleStatus.value = 'loading'
   try {
-    const data = await getSchedule(performance.value.id, dayStartUnix(date), scheduleCtrl.signal)
+    const data = await getSchedule(
+      performance.value.id,
+      dayStartUnix(date),
+      viewCityId.value,
+      scheduleCtrl.signal,
+    )
     venues.value = data?.objects || []
     scheduleStatus.value = venues.value.length ? 'ready' : 'empty'
   } catch (err) {
     if (!isAbort(err)) scheduleStatus.value = 'error'
   }
+}
+
+/** открыть событие в контексте другого города */
+function openCity(city) {
+  if (city.id === viewCityId.value) return
+  viewCityId.value = city.id
+  load()
 }
 
 function pickDate(iso) {
@@ -193,8 +219,31 @@ const description = computed(
         </div>
       </section>
 
+      <!-- продавать в этом городе нечего, но событие есть в других -->
+      <section v-if="nothingToBuy && otherCities.length" class="section">
+        <h2 class="section__title">Билеты — в другом городе</h2>
+        <p class="city-note">
+          Продажи в {{ store.city.name }} не открыты. Выберите город:
+        </p>
+        <div class="city-chips">
+          <button
+            v-for="city in otherCities"
+            :key="city.id"
+            class="city-chip"
+            type="button"
+            @click="openCity(city)"
+          >
+            <AppIcon name="pin" :size="14" />
+            {{ city.name }}
+          </button>
+        </div>
+      </section>
+
       <!-- расписание: только у событий с датами; дни без событий — disabled -->
       <section v-if="hasDates" class="section">
+        <p v-if="viewCityId !== store.city.id" class="city-note">
+          Показаны сеансы для города: {{ viewCityName }}
+        </p>
         <h2 class="section__title">Расписание</h2>
         <div class="days scroll-row">
           <button
@@ -453,6 +502,36 @@ const description = computed(
 
 .section__text :deep(img) {
   border-radius: var(--r-card);
+}
+
+/* «билеты в другом городе» */
+.city-note {
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.city-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.city-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: 1px solid var(--brand);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--brand);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.city-chip:active {
+  background: rgba(98, 54, 255, 0.08);
 }
 
 /* услуги */

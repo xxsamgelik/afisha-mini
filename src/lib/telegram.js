@@ -16,6 +16,20 @@ export function isTelegram() {
 }
 
 /**
+ * initData пользователя (base64 в tgWebAppData). Telegram кладёт её в query,
+ * а Telegram Desktop — прямо в hash (url#tgWebAppData=…), из-за чего hash-роутер
+ * видел «путь» — этот кейс ловит guard в router/index.js. Читаем сырой URL.
+ * Проверка подписи делается на бэкенде (hash в payload), здесь просто доступ.
+ */
+export function getInitData() {
+  const { search, hash } = window.location
+  const fromSearch = new URLSearchParams(search).get('tgWebAppData')
+  if (fromSearch) return fromSearch
+  const fromHash = new URLSearchParams(hash.replace(/^#/, '')).get('tgWebAppData')
+  return fromHash || ''
+}
+
+/**
  * Инициализация: ready/expand, брендирование шапки, нативная кнопка «Назад».
  * Вызывается один раз из main.js с роутером.
  */

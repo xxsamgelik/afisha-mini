@@ -70,25 +70,26 @@ export async function getListing({ slug, date, signal }) {
   return { events, filter: camelizeDeep(body?.filter) || {} }
 }
 
-/** Деталка события: {performance, objects, calendar, more, cities} */
-export async function getEvent(eventSlug) {
-  const body = await request(`/api/v3/pages/events/${eventSlug}`)
+/** Деталка события: {performance, objects, calendar, cities, more}. cityId — опциональный override (события «в другом городе») */
+export async function getEvent(eventSlug, cityId) {
+  const body = await request(`/api/v3/pages/events/${eventSlug}`, cityId ? { cityId } : {})
   return {
     performance: camelizeDeep(body?.performance) || null,
     objects: camelizeDeep(body?.objects) || [],
     calendar: body?.calendar || [], // {date:'YYYY-MM-DD', count} — не камелязим, ключ date
+    cities: camelizeDeep(body?.cities) || [],
     more: camelizeDeep(body?.more?.data) || [],
   }
 }
 
 /**
  * Сеансы на день: data[0] = {name, objects:[{id,name,address,sessions}], events:[…]}
- * Цены сессий — копейки.
+ * Цены сессий — копейки. cityId — опциональный override.
  */
-export async function getSchedule(performanceId, dayStartUnix, signal) {
+export async function getSchedule(performanceId, dayStartUnix, cityId, signal) {
   const body = await request(
     `/api/v2/schedule/events/${performanceId}`,
-    { time: dayStartUnix, ignoreEndTime: 1 },
+    { time: dayStartUnix, ignoreEndTime: 1, ...(cityId ? { cityId } : {}) },
     { signal },
   )
   return camelizeDeep(body?.data?.[0]) || null

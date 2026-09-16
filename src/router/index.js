@@ -18,6 +18,16 @@ export const router = createRouter({
     { path: '/event/:slug', name: 'event', component: EventView, meta: { back: true } },
     { path: '/search', name: 'search', component: SearchView, meta: { back: true, title: 'Поиск' } },
     { path: '/city', name: 'city', component: CityView, meta: { back: true, title: 'Город' } },
-    { path: '/:pathMatch(.*)*', name: 'notfound', component: NotFoundView, meta: { back: true, title: 'Не найдено' } },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'notfound',
+      component: NotFoundView,
+      meta: { back: true, title: 'Не найдено' },
+      // Telegram Desktop кладёт tgWebAppData в hash (url#tgWebAppData=…), и
+      // hash-роутер принимает это за путь → редиректим на главную
+      beforeEnter: (to) => {
+        if (to.path.includes('tgWebAppData=')) return { path: '/' }
+      },
+    },
   ],
 })
