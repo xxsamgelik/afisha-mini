@@ -288,12 +288,13 @@ const description = computed(
   padding: 16px;
 }
 
-/* hero */
+/* hero: всегда 16:9, начинается сразу под шапкой */
 .hero {
   position: relative;
-  min-height: 230px;
-  /* верх картинки уходит под полупрозрачную шапку */
-  margin-top: calc(-1 * (var(--header-h) + var(--safe-top)));
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  overflow: hidden;
+  background: var(--surface-3);
 }
 
 .hero__img {
@@ -307,15 +308,18 @@ const description = computed(
 .hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(21, 12, 41, 0.05) 30%, rgba(21, 12, 41, 0.82) 100%);
+  background: linear-gradient(180deg, rgba(21, 12, 41, 0) 40%, rgba(21, 12, 41, 0.78) 100%);
 }
 
 .hero__data {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 120px 16px 16px;
+  gap: 6px;
+  padding: 16px;
   color: #fff;
 }
 
@@ -344,7 +348,11 @@ const description = computed(
 }
 
 .hero__name {
-  font-size: 22px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1.2;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);

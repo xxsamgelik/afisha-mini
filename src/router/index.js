@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
+import CategoryView from '@/views/CategoryView.vue'
 import EventView from '@/views/EventView.vue'
 import HomeView from '@/views/HomeView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
@@ -13,6 +14,7 @@ export const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
   routes: [
     { path: '/', name: 'home', component: HomeView },
+    { path: '/c/:slug', name: 'category', component: CategoryView },
     { path: '/event/:slug', name: 'event', component: EventView, meta: { back: true } },
     { path: '/search', name: 'search', component: SearchView, meta: { back: true, title: 'Поиск' } },
     { path: '/city', name: 'city', component: CityView, meta: { back: true, title: 'Город' } },

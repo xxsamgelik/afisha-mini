@@ -22,9 +22,9 @@ export async function getCategories(cityId) {
 }
 
 /**
- * Главная лента: /api/v3/pages/afisha — тот же фид, что на home 24afisha.by.
- * Ответ сгруппирован по категориям ({top:…, kino:…}), собираем в плоский список
- * без дублей (top пересекается с тематическими группами).
+ * Главная: /api/v3/pages/afisha — тот же фид, что на home 24afisha.by.
+ * Возвращает секции {meta:{name,slug,typeView}, events[]}; событие показывается
+ * один раз (top пересекается с тематическими группами — берём первое вхождение).
  */
 export async function getHomeFeed(signal) {
   const body = await request(
@@ -33,16 +33,18 @@ export async function getHomeFeed(signal) {
     { signal },
   )
   const seen = new Set()
-  const events = []
+  const sections = []
   for (const group of Object.values(body?.data || {})) {
-    for (const raw of group?.events || []) {
-      const event = camelizeDeep(raw)
-      if (!event?.slug || seen.has(event.slug)) continue
-      seen.add(event.slug)
-      events.push(event)
-    }
+    const events = (group?.events || [])
+      .map(camelizeDeep)
+      .filter((event) => {
+        if (!event?.slug || seen.has(event.slug)) return false
+        seen.add(event.slug)
+        return true
+      })
+    if (events.length) sections.push({ meta: group.meta, events })
   }
-  return events
+  return sections
 }
 
 /**

@@ -1,4 +1,7 @@
 <script setup>
+// Шапка. На главной и в категории (nav-вариант) — как на 24afisha.by:
+// градиент + строка лого/город/поиск + лента категорий белым текстом (sub-nav).
+// На внутренних страницах — sticky: назад + заголовок.
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -7,33 +10,52 @@ import { store } from '@/store'
 
 const route = useRoute()
 
-const isBack = computed(() => Boolean(route.meta.back))
-const isOverlay = computed(() => route.name === 'event')
+const isNav = computed(() => route.name === 'home' || route.name === 'category')
 const title = computed(() => store.headerTitle || route.meta.title || '')
+const activeSlug = computed(() => String(route.params.slug || ''))
 </script>
 
 <template>
-  <header class="hdr" :class="{ 'hdr--overlay': isOverlay }">
+  <header class="hdr" :class="{ 'hdr--nav': isNav }">
     <div class="hdr__sheen" aria-hidden="true" />
-    <template v-if="!isBack">
-      <router-link class="hdr__logo" to="/c/top">24<span> афиша</span></router-link>
-      <router-link class="hdr__city" to="/city">
-        <AppIcon name="pin" :size="16" />
-        <span>{{ store.city.name }}</span>
+    <div class="hdr__row">
+      <template v-if="isNav">
+        <router-link class="hdr__logo" to="/">24<span> афиша</span></router-link>
+        <router-link class="hdr__city" to="/city">
+          <AppIcon name="pin" :size="16" />
+          <span>{{ store.city.name }}</span>
+        </router-link>
+        <router-link class="hdr__icon" to="/search" aria-label="Поиск">
+          <AppIcon name="search" :size="20" />
+        </router-link>
+      </template>
+      <template v-else>
+        <button class="hdr__icon" type="button" aria-label="Назад" @click="$router.back()">
+          <AppIcon name="arrow-left" :size="22" />
+        </button>
+        <div class="hdr__title">{{ title }}</div>
+        <router-link
+          v-if="route.name === 'event'"
+          class="hdr__icon"
+          to="/search"
+          aria-label="Поиск"
+        >
+          <AppIcon name="search" :size="20" />
+        </router-link>
+      </template>
+    </div>
+
+    <nav v-if="isNav" class="hdr__cats scroll-row" aria-label="Категории">
+      <router-link
+        v-for="category in store.categories"
+        :key="category.id"
+        class="hdr__cat"
+        :class="{ 'is-active': category.slug === activeSlug }"
+        :to="`/c/${category.slug}`"
+      >
+        {{ category.name }}
       </router-link>
-      <router-link class="hdr__icon" to="/search" aria-label="Поиск">
-        <AppIcon name="search" :size="20" />
-      </router-link>
-    </template>
-    <template v-else>
-      <button class="hdr__icon" type="button" aria-label="Назад" @click="$router.back()">
-        <AppIcon name="arrow-left" :size="22" />
-      </button>
-      <div class="hdr__title">{{ title }}</div>
-      <router-link v-if="route.name === 'event'" class="hdr__icon" to="/search" aria-label="Поиск">
-        <AppIcon name="search" :size="20" />
-      </router-link>
-    </template>
+    </nav>
   </header>
 </template>
 
@@ -42,13 +64,13 @@ const title = computed(() => store.headerTitle || route.meta.title || '')
   position: sticky;
   top: 0;
   z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: calc(var(--header-h) + var(--safe-top));
-  padding: var(--safe-top) 16px 0;
   background: var(--grad);
   color: var(--on-brand);
+}
+
+/* на навигационных страницах шапка уезжает при скролле, как на сайте */
+.hdr--nav {
+  position: relative;
 }
 
 /* фирменный блик поверх градиента */
@@ -61,23 +83,13 @@ const title = computed(() => store.headerTitle || route.meta.title || '')
   pointer-events: none;
 }
 
-.hdr > * {
+.hdr__row {
   position: relative;
-}
-
-/* На странице события — прозрачный градиент с блюром: hero картинки заходит под шапку */
-.hdr--overlay {
-  background: transparent;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.hdr--overlay::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--grad);
-  opacity: 0.78;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: calc(var(--header-h) + var(--safe-top));
+  padding: var(--safe-top) 16px 0;
 }
 
 .hdr__logo {
@@ -133,5 +145,29 @@ const title = computed(() => store.headerTitle || route.meta.title || '')
   flex-shrink: 0;
   border-radius: var(--r-input);
   color: var(--on-brand);
+}
+
+/* лента категорий на градиенте — как sub-nav на сайте */
+.hdr__cats {
+  position: relative;
+  gap: 24px;
+  padding: 6px 16px 12px;
+}
+
+.hdr__cat {
+  flex-shrink: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
+}
+
+.hdr__cat.is-active {
+  color: var(--on-brand);
+  border-bottom-color: var(--on-brand);
 }
 </style>

@@ -4,7 +4,7 @@
 import { reactive } from 'vue'
 
 import { setApiCity } from '@/lib/api'
-import { getCities } from '@/lib/endpoints'
+import { getCities, getCategories } from '@/lib/endpoints'
 
 const CITY_KEY = '24mini:city'
 
@@ -14,6 +14,7 @@ export const store = reactive({
   ready: false,
   city: { id: 3, name: 'Минск', slug: 'minsk' },
   cities: [],
+  categories: [],
   currencySymbol: 'р.',
   headerTitle: '',
   widget: { open: false, url: '', title: '' },
@@ -40,12 +41,18 @@ function persistCity() {
 export async function init() {
   restoreCity()
   setApiCity(store.city.id)
+  // города и категории — независимо: недоступность одного не блокирует второе
   getCities()
     .then((cities) => {
       store.cities = cities
     })
     .catch(() => {})
+  await reloadCategories().catch(() => {})
   store.ready = true
+}
+
+export async function reloadCategories() {
+  store.categories = await getCategories(store.city.id)
 }
 
 export function setCity(city) {
@@ -53,6 +60,7 @@ export function setCity(city) {
   store.city = { id: city.id, name: city.name, slug: city.slug }
   setApiCity(city.id)
   persistCity()
+  reloadCategories().catch(() => {})
 }
 
 // ── виджет продажи (saleframe) ───────────────────────────────────────────────
