@@ -67,4 +67,5 @@ SDK мини-аппов пока не предоставлен. Заглушка
 
 ## Деплой
 
-`yarn build` → `Dockerfile` (nginx:alpine + `nginx.conf` со SPA-fallback). Роутер работает на hash-режиме (`/#/...`) — не зависит от пути, где «Оплати» разместит апп; переход на `createWebHistory()` — одна строка в `src/router/index.js` (nginx уже готов).
+- **GitHub Pages (тест/демо):** `git remote add origin git@github.com:<user>/<repo>.git`, затем `yarn deploy:gh` (соберёт и запушит `dist/` в ветку `gh-pages`). В Settings → Pages выбрать ветку `gh-pages` — получишь `https://<user>.github.io/<repo>/` по HTTPS. Репо на free-плане должно быть публичным. Hash-роутер + `base:'./'` работают из подпапки, 404 на пути невозможен.
+- **Docker/свой nginx:** `yarn build` → `Dockerfile` (nginx:alpine + `nginx.conf` со SPA-fallback). Роутер работает на hash-режиме (`/#/...`) — не зависит от пути, где «Оплати» разместит апп; переход на `createWebHistory()` — одна строка в `src/router/index.js` (nginx уже готов).
