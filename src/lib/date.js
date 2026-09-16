@@ -23,6 +23,11 @@ export function todayIso() {
   return isoInMinsk.format(new Date())
 }
 
+/** Date → 'YYYY-MM-DD' в минском времени */
+export function toIso(date) {
+  return isoInMinsk.format(date)
+}
+
 export function isValidIso(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
@@ -61,6 +66,20 @@ export function monthShort(iso) {
 /** «16 сентября» */
 export function dateHuman(iso) {
   return `${dayNumber(iso)} ${MONTHS_GEN[Number(iso.slice(5, 7)) - 1]}`
+}
+
+/**
+ * Период показа из showFrom/showTo (unix-секунды):
+ *   один день → «10 сентября», период → «с 10 сентября» (дата конца не влезает в карточку).
+ * Порт логики compare() из common/mixin/event.js, даты — в минском времени.
+ */
+export function showPeriod(showFrom, showTo) {
+  const from = showFrom ? toIso(new Date(showFrom * 1000)) : null
+  const to = showTo ? toIso(new Date(showTo * 1000)) : null
+  if (from && to) return from === to ? dateHuman(from) : `с ${dateHuman(from)}`
+  if (from) return `с ${dateHuman(from)}`
+  if (to) return `по ${dateHuman(to)}`
+  return ''
 }
 
 /** «16 сентября, пт» */

@@ -1,8 +1,9 @@
 <script setup>
-// Карточка события: постер 240×340 + цена-чип + название + тип.
+// Карточка события: постер 240×340 + цена-чип + название + дата показа («с 10 сентября»).
 import { computed } from 'vue'
 
 import AppIcon from '@/components/AppIcon.vue'
+import { showPeriod } from '@/lib/date'
 import { priceLabel } from '@/lib/format'
 import { poster } from '@/lib/img'
 
@@ -12,7 +13,14 @@ const props = defineProps({
 
 const image = computed(() => poster(props.event.image))
 const price = computed(() => priceLabel(props.event.minPrice))
-const kind = computed(() => props.event.types?.[0]?.name || props.event.genres?.[0]?.name || '')
+// дата показа; если дат нет вовсе — тип как фолбэк
+const kind = computed(
+  () =>
+    showPeriod(props.event.showFrom, props.event.showTo) ||
+    props.event.types?.[0]?.name ||
+    props.event.genres?.[0]?.name ||
+    '',
+)
 </script>
 
 <template>
@@ -30,7 +38,7 @@ const kind = computed(() => props.event.types?.[0]?.name || props.event.genres?.
     </div>
     <p class="event-card__name">{{ event.name }}</p>
     <p v-if="kind" class="event-card__meta">
-      <AppIcon name="clock" :size="12" />
+      <AppIcon name="calendar" :size="12" />
       {{ kind }}
     </p>
   </router-link>

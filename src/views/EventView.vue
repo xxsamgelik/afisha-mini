@@ -172,20 +172,25 @@ const description = computed(
         </div>
       </div>
 
-      <!-- описание: скрыто по умолчанию, раскрывается тапом -->
+      <!-- описание: тизер с блюром, раскрывается тапом -->
       <section v-if="description" class="section">
         <button class="section__toggle" type="button" @click="descriptionOpen = !descriptionOpen">
           <h2 class="section__title">Описание</h2>
-          <AppIcon
-            class="section__chevron"
-            :class="{ 'is-open': descriptionOpen }"
-            name="chevron-down"
-            :size="18"
-          />
+          <span class="section__toggle-hint">
+            {{ descriptionOpen ? 'Свернуть' : 'Показать' }}
+            <AppIcon
+              class="section__chevron"
+              :class="{ 'is-open': descriptionOpen }"
+              name="chevron-down"
+              :size="16"
+            />
+          </span>
         </button>
-        <!-- HTML приходит из админки 24afisha, как и на самом сайте -->
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <div v-show="descriptionOpen" class="section__text" v-html="description" />
+        <div class="section__text-wrap" :class="{ 'is-open': descriptionOpen }">
+          <!-- HTML приходит из админки 24afisha, как и на самом сайте -->
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div class="section__text" v-html="description" />
+        </div>
       </section>
 
       <!-- расписание: только у событий с датами; дни без событий — disabled -->
@@ -381,7 +386,7 @@ const description = computed(
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   text-align: left;
 }
 
@@ -389,13 +394,50 @@ const description = computed(
   margin-bottom: 0;
 }
 
+.section__toggle-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand);
+}
+
 .section__chevron {
-  color: var(--text-muted-2);
+  color: var(--brand);
   transition: transform 0.2s ease;
 }
 
 .section__chevron.is-open {
   transform: rotate(180deg);
+}
+
+/* свёрнутое описание: ~3 строки + снизу блюр-фейд в цвет фона */
+.section__text-wrap {
+  position: relative;
+  max-height: 66px;
+  overflow: hidden;
+}
+
+.section__text-wrap.is-open {
+  max-height: none;
+}
+
+.section__text-wrap:not(.is-open)::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 44px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.85) 75%,
+    #fff 100%
+  );
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 
 .section__text {
