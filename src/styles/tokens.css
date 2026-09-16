@@ -1,0 +1,51 @@
+/* Дизайн-токены 24afisha.by (apps/afisha/assets/main.scss), собранные для mini app */
+:root {
+  /* цвет */
+  --brand: #6236ff;
+  --brand-hover: #7b5cff;
+  --btn: #6d5be8;
+  --btn-hover: #5c4ad6;
+  --on-brand: #fff;
+  --text: #151515;
+  --text-muted: #666;
+  --text-muted-2: #8b95a1;
+  --surface: #fff;
+  --surface-2: #f7f8fa;
+  --surface-3: #f0f0f0;
+  --border: #e5e7eb;
+  --border-light: #f1f1f1;
+  --weekend: #ff2d2d;
+  --chip-price-bg: rgba(32, 32, 32, 0.8);
+  --danger: #ff2d2d;
+
+  /* градиент шапки + блик */
+  --grad: linear-gradient(110deg, #4937d0 0%, #6849dc 30%, #9256d2 58%, #c961b5 78%, #e76f91 100%);
+  --grad-sheen:
+    radial-gradient(circle at 72% 20%, rgba(255, 255, 255, 0.26), transparent 26%),
+    linear-gradient(110deg, transparent 8%, rgba(255, 255, 255, 0.18) 42%, transparent 62%);
+
+  /* шрифт */
+  --font:
+    Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+
+  /* радиусы */
+  --r-card: 8px;
+  --r-date: 8px;
+  --r-input: 12px;
+  --r-pill: 20px;
+  --r-chip: 22px;
+  --r-hero: 24px;
+
+  /* тени */
+  --sh-dropdown: 0 2px 8px rgba(0, 1, 2, 0.2);
+  --sh-pill: 0 1px 4px rgba(21, 21, 21, 0.06);
+  --sh-card: 0 2px 16px rgba(0, 0, 0, 0.15);
+  --sh-focus: 0 0 0 3px rgba(132, 116, 240, 0.2);
+
+  /* каркас */
+  --header-h: 52px;
+  --shell-w: 480px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
