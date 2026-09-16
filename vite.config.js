@@ -19,6 +19,10 @@ export default defineConfig({
     allowedHosts: [
       'sad-chicken-thank.loca.lt', // ваш текущий домен
       '.loca.lt',                   // или разрешить все поддомены localtunnel
+      '.trycloudflare.com',         // cloudflared quick tunnel (без интерстициала)
+      '.pinggy.io',                 // pinggy ssh-туннель
+      '.pinggy-free.link',          // pinggy free (без токена)
+      '.pinggy.net',
     ],
   },
   preview: {
