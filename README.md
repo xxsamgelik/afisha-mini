@@ -46,6 +46,18 @@ yarn preview    # раздача dist на :5174
 
 SDK мини-аппов пока не предоставлен. Заглушка-бридж — `src/lib/oplati.js`: `getUser`, `pay`, `openExternal`, `share`, `closeApp`, `setTitle`. Все функции безопасны без бриджа (никогда не бросают). Когда придут доки — реализовать транспорт в `getBridge()/call()`, компоненты не меняются.
 
+## Telegram Mini App
+
+Приложение работает и как Telegram Mini App — это тот же URL в webview Telegram. Адаптер — `src/lib/telegram.js`: `ready/expand`, брендирование шапки (`#6236ff`), нативная кнопка «Назад» ↔ роутер, `openLink` для внешних ссылок, haptic на покупку. Вне Telegram всё молча неактивно (`isTelegram()` детектит по `platform !== 'unknown'`).
+
+Чтобы опубликовать как мини-апп Telegram:
+1. Развернуть `dist/` на публичном **HTTPS** (Telegram не принимает http/self-signed).
+2. В @BotFather: `/newapp` → выбрать бота → название/описание/иконка → указать URL.
+   Либо привязать к существующему боту: `/setmenubutton`.
+3. Deep-link вида `https://t.me/<bot>/<app>` откроет апп; параметры можно передавать через `?startapp=...`.
+
+Для локального теста: HTTPS-туннель до dev-сервера (`allowedHosts` в `vite.config.js` уже разрешает `*.loca.lt`).
+
 ## Конфигурация
 
 | Переменная | По умолчанию | Зачем |

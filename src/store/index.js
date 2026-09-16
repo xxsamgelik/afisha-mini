@@ -4,6 +4,7 @@
 import { reactive } from 'vue'
 
 import { setApiCity } from '@/lib/api'
+import { haptic } from '@/lib/telegram'
 import { getCities, getCategories } from '@/lib/endpoints'
 
 const CITY_KEY = '24mini:city'
@@ -67,33 +68,26 @@ export function setCity(city) {
 // URL — порт common/components/widget/widget.vue:113-146 + store/widget.js:168
 // (openServiceItem), хост захардкожен на прод.
 
+function openWidget(url, title) {
+  haptic('medium')
+  store.widget = { open: true, url, title }
+}
+
 export function openSession(session, title = '') {
   if (!session?.id) return
-  store.widget = {
-    open: true,
-    url: `${SALEFRAME_HOST}?sid=${session.id}&lang=ru`,
-    title,
-  }
+  openWidget(`${SALEFRAME_HOST}?sid=${session.id}&lang=ru`, title)
 }
 
 /** товар/билет события без дат: /item?oid=<institutionId>&iid=<itemId> */
 export function openItem(item, title = '') {
   if (!item?.id) return
-  store.widget = {
-    open: true,
-    url: `${SALEFRAME_HOST}/item?oid=${item.institutionId}&iid=${item.id}&lang=ru`,
-    title,
-  }
+  openWidget(`${SALEFRAME_HOST}/item?oid=${item.institutionId}&iid=${item.id}&lang=ru`, title)
 }
 
 /** услуга: ?oid=<id площадки>&seid=<id услуги> */
 export function openService(objectId, serviceId, title = '') {
   if (!objectId || !serviceId) return
-  store.widget = {
-    open: true,
-    url: `${SALEFRAME_HOST}?oid=${objectId}&seid=${serviceId}&lang=ru`,
-    title,
-  }
+  openWidget(`${SALEFRAME_HOST}?oid=${objectId}&seid=${serviceId}&lang=ru`, title)
 }
 
 export function closeWidget() {

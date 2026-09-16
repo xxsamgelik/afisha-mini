@@ -16,6 +16,10 @@ export default defineConfig({
     port: 5173, // 3000/4000/5000/8080/6000 заняты другими проектами
     strictPort: true,
     host: true,
+    allowedHosts: [
+      'sad-chicken-thank.loca.lt', // ваш текущий домен
+      '.loca.lt',                   // или разрешить все поддомены localtunnel
+    ],
   },
   preview: {
     port: 5174,

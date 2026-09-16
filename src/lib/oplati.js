@@ -9,6 +9,8 @@
 //   Generic: window.Oplati?.postMessage({id, method, params})
 // Ответы приходят в window message: {id, ok, data | error}.
 
+import { openLink } from './telegram'
+
 const pending = new Map() // id → { resolve, reject }
 let seq = 0
 let listening = false
@@ -93,7 +95,8 @@ export function openExternal(url) {
     fire('openExternal', { url })
     return
   }
-  window.open(url, '_blank', 'noopener')
+  // в Telegram webview window.open часто заблокирован — нативный openLink
+  openLink(url)
 }
 
 /** закрыть мини-апп */
