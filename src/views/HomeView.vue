@@ -1,7 +1,7 @@
 <script setup>
 // Главная — как на 24afisha.by: секции по категориям из /api/v3/pages/afisha.
 // Первая секция — «Рекомендуем» (top), заголовки остальных ведут в категорию.
-// typeView: horizontal — горизонтальная лента, иначе сетка 2 колонки.
+// Все секции — горизонтальные мини-слайдеры (overflow-x).
 import { onMounted, ref } from 'vue'
 
 import EventCard from '@/components/EventCard.vue'
@@ -63,16 +63,13 @@ onMounted(load)
         </router-link>
       </div>
 
-      <div v-if="section.meta?.typeView === 'horizontal'" class="home-section__row scroll-row">
+      <div class="home-section__row scroll-row">
         <EventCard
           v-for="event in section.events"
           :key="event.id"
           class="home-section__row-card"
           :event="event"
         />
-      </div>
-      <div v-else class="home-section__grid">
-        <EventCard v-for="event in section.events" :key="event.id" :event="event" />
       </div>
     </section>
   </template>
@@ -106,13 +103,6 @@ onMounted(load)
   font-size: 13px;
   font-weight: 600;
   color: var(--brand);
-}
-
-.home-section__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 12px;
-  padding: 0 16px;
 }
 
 .home-section__row {
